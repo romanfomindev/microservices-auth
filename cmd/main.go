@@ -13,7 +13,6 @@ import (
 const grpcPort = 50051
 
 func main() {
-
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -21,7 +20,7 @@ func main() {
 
 	s := grpc.NewServer()
 	reflection.Register(s)
-	userService := handlers.UserV1Service{}
+	userService := &handlers.UserV1Service{}
 	desc.RegisterUserV1Server(s, userService)
 
 	if err = s.Serve(lis); err != nil {

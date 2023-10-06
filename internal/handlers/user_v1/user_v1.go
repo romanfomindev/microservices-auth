@@ -13,8 +13,7 @@ type UserV1Service struct {
 	desc.UnimplementedUserV1Server
 }
 
-func (UserV1Service) Create(ctx context.Context, request *desc.CreateRequest) (*desc.CreateResponse, error) {
-
+func (s *UserV1Service) Create(ctx context.Context, request *desc.CreateRequest) (*desc.CreateResponse, error) {
 	log.Printf("name: %s, email: %s, password: %s, password_confirm: %s, role: %s",
 		request.GetInfo().GetName(),
 		request.GetInfo().GetEmail(),
@@ -28,8 +27,7 @@ func (UserV1Service) Create(ctx context.Context, request *desc.CreateRequest) (*
 	}, nil
 }
 
-func (UserV1Service) Get(ctx context.Context, request *desc.GetRequest) (*desc.GetResponse, error) {
-
+func (s *UserV1Service) Get(ctx context.Context, request *desc.GetRequest) (*desc.GetResponse, error) {
 	log.Printf("ID: %d\n", request.GetId())
 
 	return &desc.GetResponse{
@@ -48,19 +46,19 @@ func (UserV1Service) Get(ctx context.Context, request *desc.GetRequest) (*desc.G
 	}, nil
 }
 
-func (UserV1Service) Update(ctx context.Context, request *desc.UpdateRequest) (*emptypb.Empty, error) {
+func (s *UserV1Service) Update(ctx context.Context, request *desc.UpdateRequest) (*emptypb.Empty, error) {
 	log.Printf("id: %d, name: %s, email: %s, role: %s",
 		request.GetId(),
 		request.GetName(),
 		request.GetEmail(),
 		request.Role,
 	)
-	return nil, nil
+
+	return &emptypb.Empty{}, nil
 }
 
-func (UserV1Service) Delete(ctx context.Context, request *desc.DeleteRequest) (*emptypb.Empty, error) {
-
+func (s *UserV1Service) Delete(ctx context.Context, request *desc.DeleteRequest) (*emptypb.Empty, error) {
 	log.Printf("id: %d", request.GetId())
 
-	return nil, nil
+	return &emptypb.Empty{}, nil
 }

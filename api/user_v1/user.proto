@@ -16,8 +16,9 @@ service UserV1 {
 }
 
 enum Roles {
-  USER = 0;
-  ADMIN = 1;
+  UNKNOWN = 0;
+  USER = 1;
+  ADMIN = 2;
 }
 
 message UserInfo {
@@ -61,11 +62,3 @@ message UpdateRequest {
 message DeleteRequest {
   uint64 id = 1;
 }
-
-
-
-
-
-
-
-
