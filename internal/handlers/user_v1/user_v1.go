@@ -2,13 +2,14 @@ package handlers
 
 import (
 	"context"
+	"log"
+
 	"github.com/brianvoe/gofakeit"
 	"github.com/romanfomindev/microservices-auth/internal/managers"
-	"github.com/romanfomindev/microservices-auth/internal/models"
+
 	desc "github.com/romanfomindev/microservices-auth/pkg/user_v1"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"log"
 )
 
 type UserV1Service struct {
@@ -36,18 +37,24 @@ func (s *UserV1Service) Create(ctx context.Context, request *desc.CreateRequest)
 		request.GetInfo().GetName(),
 		request.GetInfo().GetEmail(),
 		request.GetInfo().GetPassword(),
-		models.ROLE_USER,
+		request.GetInfo().GetRole().String(),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	return &desc.CreateResponse{
 		Id: lastInsertId,
-	}, err
+	}, nil
 }
 
 func (s *UserV1Service) Get(ctx context.Context, request *desc.GetRequest) (*desc.GetResponse, error) {
 	log.Printf("ID: %d\n", request.GetId())
 
-	user := s.manager.GetById(ctx, request.GetId())
+	user, err := s.manager.GetById(ctx, request.GetId())
+	if err != nil {
+		return nil, err
+	}
 
 	/** TODO трансформатор с grpc to json */
 	return &desc.GetResponse{
@@ -56,7 +63,7 @@ func (s *UserV1Service) Get(ctx context.Context, request *desc.GetRequest) (*des
 			Info: &desc.UserInfo{
 				Name:  user.Name,
 				Email: user.Email,
-				Role:  desc.Roles_USER,
+				Role:  desc.Roles(desc.Roles_value[user.Role]),
 			},
 			CreatedAt: timestamppb.New(gofakeit.Date()),
 			UpdatedAt: timestamppb.New(gofakeit.Date()),
@@ -72,8 +79,13 @@ func (s *UserV1Service) Update(ctx context.Context, request *desc.UpdateRequest)
 		request.Role,
 	)
 
-	err := s.manager.Update(ctx, request.GetId(), request.GetName().GetValue(), request.GetEmail().GetValue(), models.ROLE_USER)
-
+	err := s.manager.Update(
+		ctx,
+		request.GetId(),
+		request.GetName().GetValue(),
+		request.GetEmail().GetValue(),
+		request.GetRole().String(),
+	)
 	if err != nil {
 		return &emptypb.Empty{}, err
 	}

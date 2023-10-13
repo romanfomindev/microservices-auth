@@ -2,9 +2,10 @@ package managers
 
 import (
 	"context"
+	"time"
+
 	"github.com/romanfomindev/microservices-auth/internal/models"
 	"github.com/romanfomindev/microservices-auth/internal/repositories"
-	"time"
 )
 
 type UserManager struct {
@@ -35,7 +36,7 @@ func (m *UserManager) Update(ctx context.Context, id uint64, name, email, role s
 	return m.repo.Update(ctx, id, name, email, role)
 }
 
-func (m *UserManager) GetById(ctx context.Context, id uint64) models.User {
+func (m *UserManager) GetById(ctx context.Context, id uint64) (models.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer func() {
 		cancel()

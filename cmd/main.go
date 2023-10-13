@@ -28,6 +28,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to get grpc config: %v", err)
 	}
+
 	pgConfig, err := env.NewPGConfig()
 	if err != nil {
 		log.Fatalf("failed to get pg config: %v", err)
@@ -40,7 +41,12 @@ func main() {
 
 	s := grpc.NewServer()
 	reflection.Register(s)
-	userRepository := pg.NewUserRepository(ctx, pgConfig)
+
+	userRepository, err := pg.NewUserRepository(ctx, pgConfig)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
+	}
+
 	userManager := managers.NewUserManager(userRepository)
 	userService := handlers.NewUserService(userManager)
 

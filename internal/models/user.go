@@ -2,9 +2,11 @@ package models
 
 import "time"
 
-const ROLE_UNKNOWN = "unknown"
-const ROLE_USER = "user"
-const ROLE_ADMIN = "admin"
+const (
+	ROLE_UNKNOWN = "unknown"
+	ROLE_USER    = "user"
+	ROLE_ADMIN   = "admin"
+)
 
 type User struct {
 	ID              uint
@@ -13,6 +15,6 @@ type User struct {
 	Password        string
 	PasswordConfirm string
 	Role            string
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	CreatedAt       *time.Time
+	UpdatedAt       *time.Time
 }
