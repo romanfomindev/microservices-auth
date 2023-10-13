@@ -1,13 +1,14 @@
 -- +goose Up
 -- +goose StatementBegin
-create table users (
-    id serial primary key,
-    name varchar(255) not null,
-    email varchar(255) not null,
-    password varchar(255) not null,
-    role varchar(255) not null,
+create table users
+(
+    id         serial primary key,
+    name       text      not null,
+    email      text      not null,
+    password   text      not null,
+    role       text      not null,
     created_at timestamp not null default now(),
-updated_at timestamp
+    updated_at timestamp
 );
 -- +goose StatementEnd
 
