@@ -52,14 +52,16 @@ func (r *UserRepository) Update(ctx context.Context, id uint64, name, email, rol
 	return nil
 }
 
-func (r *UserRepository) GetById(ctx context.Context, id uint64) (models.User, error) {
+func (r *UserRepository) GetById(ctx context.Context, id uint64) (*models.User, error) {
 	var user models.User
 	sqlStatement := "SELECT name, email, password, role, created_at, updated_at FROM users WHERE id = $1"
 
 	err := r.conn.QueryRow(ctx, sqlStatement, id).
 		Scan(&user.Name, &user.Email, &user.Password, &user.Role, &user.CreatedAt, &user.UpdatedAt)
-
-	return user, err
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (r *UserRepository) Delete(ctx context.Context, id uint64) error {
