@@ -1,11 +1,15 @@
 package models
 
-import "time"
+import (
+	"time"
+)
+
+type Role string
 
 const (
-	ROLE_UNKNOWN = "unknown"
-	ROLE_USER    = "user"
-	ROLE_ADMIN   = "admin"
+	RoleUnknown Role = "unknown"
+	RoleUser    Role = "user"
+	RoleAdmin   Role = "admin"
 )
 
 type User struct {
@@ -15,6 +19,6 @@ type User struct {
 	Password        string
 	PasswordConfirm string
 	Role            string
-	CreatedAt       *time.Time
+	CreatedAt       time.Time
 	UpdatedAt       *time.Time
 }
