@@ -4,26 +4,25 @@ import (
 	"context"
 	"log"
 
-	"github.com/brianvoe/gofakeit"
-	"github.com/romanfomindev/microservices-auth/internal/managers"
+	"github.com/romanfomindev/microservices-auth/internal/convertor"
+	"github.com/romanfomindev/microservices-auth/internal/services"
 
 	desc "github.com/romanfomindev/microservices-auth/pkg/user_v1"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type UserV1Service struct {
+type UserV1Handlers struct {
 	desc.UnimplementedUserV1Server
-	manager *managers.UserManager
+	serv services.UserService
 }
 
-func NewUserService(manager *managers.UserManager) desc.UserV1Server {
-	return &UserV1Service{
-		manager: manager,
+func NewUserHandlers(service services.UserService) *UserV1Handlers {
+	return &UserV1Handlers{
+		serv: service,
 	}
 }
 
-func (s *UserV1Service) Create(ctx context.Context, request *desc.CreateRequest) (*desc.CreateResponse, error) {
+func (s *UserV1Handlers) Create(ctx context.Context, request *desc.CreateRequest) (*desc.CreateResponse, error) {
 	log.Printf("name: %s, email: %s, password: %s, password_confirm: %s, role: %s",
 		request.GetInfo().GetName(),
 		request.GetInfo().GetEmail(),
@@ -32,12 +31,9 @@ func (s *UserV1Service) Create(ctx context.Context, request *desc.CreateRequest)
 		request.GetInfo().GetRole(),
 	)
 
-	lastInsertId, err := s.manager.Create(
+	lastInsertId, err := s.serv.Create(
 		ctx,
-		request.GetInfo().GetName(),
-		request.GetInfo().GetEmail(),
-		request.GetInfo().GetPassword(),
-		request.GetInfo().GetRole().String(),
+		convertor.ToUserFromDesc(request.GetInfo()),
 	)
 	if err != nil {
 		return nil, err
@@ -48,30 +44,18 @@ func (s *UserV1Service) Create(ctx context.Context, request *desc.CreateRequest)
 	}, nil
 }
 
-func (s *UserV1Service) Get(ctx context.Context, request *desc.GetRequest) (*desc.GetResponse, error) {
+func (s *UserV1Handlers) Get(ctx context.Context, request *desc.GetRequest) (*desc.GetResponse, error) {
 	log.Printf("ID: %d\n", request.GetId())
 
-	user, err := s.manager.GetById(ctx, request.GetId())
+	user, err := s.serv.GetById(ctx, request.GetId())
 	if err != nil {
 		return nil, err
 	}
 
-	/** TODO трансформатор с grpc to json */
-	return &desc.GetResponse{
-		User: &desc.User{
-			Id: request.GetId(),
-			Info: &desc.UserInfo{
-				Name:  user.Name,
-				Email: user.Email,
-				Role:  desc.Roles(desc.Roles_value[user.Role]),
-			},
-			CreatedAt: timestamppb.New(gofakeit.Date()),
-			UpdatedAt: timestamppb.New(gofakeit.Date()),
-		},
-	}, nil
+	return convertor.ToUserGetResponseFromUser(user), nil
 }
 
-func (s *UserV1Service) Update(ctx context.Context, request *desc.UpdateRequest) (*emptypb.Empty, error) {
+func (s *UserV1Handlers) Update(ctx context.Context, request *desc.UpdateRequest) (*emptypb.Empty, error) {
 	log.Printf("id: %d, name: %s, email: %s, role: %s",
 		request.GetId(),
 		request.GetName(),
@@ -79,12 +63,10 @@ func (s *UserV1Service) Update(ctx context.Context, request *desc.UpdateRequest)
 		request.Role,
 	)
 
-	err := s.manager.Update(
+	err := s.serv.Update(
 		ctx,
 		request.GetId(),
-		request.GetName().GetValue(),
-		request.GetEmail().GetValue(),
-		request.GetRole().String(),
+		convertor.ToUserFromUpdateRequest(request),
 	)
 	if err != nil {
 		return &emptypb.Empty{}, err
@@ -93,10 +75,10 @@ func (s *UserV1Service) Update(ctx context.Context, request *desc.UpdateRequest)
 	return &emptypb.Empty{}, nil
 }
 
-func (s *UserV1Service) Delete(ctx context.Context, request *desc.DeleteRequest) (*emptypb.Empty, error) {
+func (s *UserV1Handlers) Delete(ctx context.Context, request *desc.DeleteRequest) (*emptypb.Empty, error) {
 	log.Printf("id: %d", request.GetId())
 
-	err := s.manager.Delete(ctx, request.GetId())
+	err := s.serv.Delete(ctx, request.GetId())
 
 	if err != nil {
 		return &emptypb.Empty{}, err
