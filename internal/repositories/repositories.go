@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/romanfomindev/microservices-auth/internal/models"
+	"github.com/romanfomindev/microservices-auth/internal/repositories/user/model"
 )
 
 type UserRepository interface {
-	Create(ctx context.Context, name, email, password, role string) (uint64, error)
-	Update(ctx context.Context, id uint64, name, email, role string) error
+	Create(ctx context.Context, user model.UserCreate) (uint64, error)
+	Update(ctx context.Context, id uint64, user model.UserUpdate) error
 	GetById(ctx context.Context, id uint64) (*models.User, error)
 	Delete(ctx context.Context, id uint64) error
 }
