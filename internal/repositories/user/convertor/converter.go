@@ -7,13 +7,13 @@ import (
 	"github.com/romanfomindev/microservices-auth/internal/repositories/user/model"
 )
 
-func ToUserFromUserRepo(userRepo model.User) models.User {
+func ToUserFromUserRepo(userRepo model.User) *models.User {
 	var updatedAt *time.Time
 	if userRepo.UpdatedAt.Valid {
 		updatedAt = &userRepo.UpdatedAt.Time
 	}
 
-	return models.User{
+	return &models.User{
 		ID:        userRepo.ID,
 		Name:      userRepo.Name,
 		Email:     userRepo.Email,

@@ -22,7 +22,7 @@ func NewUserHandlers(service services.UserService) *UserV1Handlers {
 	}
 }
 
-func (s *UserV1Handlers) Create(ctx context.Context, request *desc.CreateRequest) (*desc.CreateResponse, error) {
+func (h *UserV1Handlers) Create(ctx context.Context, request *desc.CreateRequest) (*desc.CreateResponse, error) {
 	log.Printf("name: %s, email: %s, password: %s, password_confirm: %s, role: %s",
 		request.GetInfo().GetName(),
 		request.GetInfo().GetEmail(),
@@ -31,7 +31,7 @@ func (s *UserV1Handlers) Create(ctx context.Context, request *desc.CreateRequest
 		request.GetInfo().GetRole(),
 	)
 
-	lastInsertId, err := s.serv.Create(
+	lastInsertId, err := h.serv.Create(
 		ctx,
 		convertor.ToUserFromDesc(request.GetInfo()),
 	)
@@ -44,10 +44,10 @@ func (s *UserV1Handlers) Create(ctx context.Context, request *desc.CreateRequest
 	}, nil
 }
 
-func (s *UserV1Handlers) Get(ctx context.Context, request *desc.GetRequest) (*desc.GetResponse, error) {
+func (h *UserV1Handlers) Get(ctx context.Context, request *desc.GetRequest) (*desc.GetResponse, error) {
 	log.Printf("ID: %d\n", request.GetId())
 
-	user, err := s.serv.GetById(ctx, request.GetId())
+	user, err := h.serv.GetById(ctx, request.GetId())
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (s *UserV1Handlers) Get(ctx context.Context, request *desc.GetRequest) (*de
 	return convertor.ToUserGetResponseFromUser(user), nil
 }
 
-func (s *UserV1Handlers) Update(ctx context.Context, request *desc.UpdateRequest) (*emptypb.Empty, error) {
+func (h *UserV1Handlers) Update(ctx context.Context, request *desc.UpdateRequest) (*emptypb.Empty, error) {
 	log.Printf("id: %d, name: %s, email: %s, role: %s",
 		request.GetId(),
 		request.GetName(),
@@ -63,7 +63,7 @@ func (s *UserV1Handlers) Update(ctx context.Context, request *desc.UpdateRequest
 		request.Role,
 	)
 
-	err := s.serv.Update(
+	err := h.serv.Update(
 		ctx,
 		request.GetId(),
 		convertor.ToUserFromUpdateRequest(request),
@@ -75,10 +75,10 @@ func (s *UserV1Handlers) Update(ctx context.Context, request *desc.UpdateRequest
 	return &emptypb.Empty{}, nil
 }
 
-func (s *UserV1Handlers) Delete(ctx context.Context, request *desc.DeleteRequest) (*emptypb.Empty, error) {
+func (h *UserV1Handlers) Delete(ctx context.Context, request *desc.DeleteRequest) (*emptypb.Empty, error) {
 	log.Printf("id: %d", request.GetId())
 
-	err := s.serv.Delete(ctx, request.GetId())
+	err := h.serv.Delete(ctx, request.GetId())
 
 	if err != nil {
 		return &emptypb.Empty{}, err

@@ -92,8 +92,7 @@ func (s *serviceProvider) TxManager(ctx context.Context) db.TxManager {
 
 func (s *serviceProvider) UserRepository(ctx context.Context) repositories.UserRepository {
 	if s.userRepository == nil {
-		repo := user.NewUserRepository(s.DBClient(ctx))
-		s.userRepository = repo
+		s.userRepository = user.NewUserRepository(s.DBClient(ctx))
 	}
 
 	return s.userRepository
@@ -101,8 +100,7 @@ func (s *serviceProvider) UserRepository(ctx context.Context) repositories.UserR
 
 func (s *serviceProvider) UserService(ctx context.Context) services.UserService {
 	if s.userService == nil {
-		service := userService.NewService(s.UserRepository(ctx))
-		s.userService = service
+		s.userService = userService.NewService(s.UserRepository(ctx))
 	}
 
 	return s.userService
@@ -110,15 +108,14 @@ func (s *serviceProvider) UserService(ctx context.Context) services.UserService 
 
 func (s *serviceProvider) UserHandlers(ctx context.Context) *handlers.UserV1Handlers {
 	if s.userHandlers == nil {
-		userHandlers := handlers.NewUserHandlers(s.UserService(ctx))
-		s.userHandlers = userHandlers
+		s.userHandlers = handlers.NewUserHandlers(s.UserService(ctx))
 	}
 	return s.userHandlers
 }
 
 func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
 	if s.dbClient == nil {
-		cl, err := pg.New(ctx, s.PGConfig().DSN())
+		cl, err := pg.New(ctx, s.PGConfig().DSN(), s.PGConfig().Timeout())
 		if err != nil {
 			log.Fatalf("failed to create db client: %v", err)
 		}

@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/pkg/errors"
@@ -12,7 +13,12 @@ type pgClient struct {
 	masterDBC db.DB
 }
 
-func New(ctx context.Context, dsn string) (db.Client, error) {
+func New(ctx context.Context, dsn string, timeout int) (db.Client, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(timeout))
+	defer func() {
+		cancel()
+	}()
+
 	dbc, err := pgxpool.Connect(ctx, dsn)
 	if err != nil {
 		return nil, errors.Errorf("failed to connect to db: %v", err)

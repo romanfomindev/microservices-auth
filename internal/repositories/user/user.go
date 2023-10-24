@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"github.com/jackc/pgx/v4"
+	"github.com/pkg/errors"
 
 	"github.com/romanfomindev/microservices-auth/internal/client/db"
 	"github.com/romanfomindev/microservices-auth/internal/models"
@@ -28,6 +30,7 @@ func (r *UserRepository) Create(ctx context.Context, user model.UserCreate) (uin
 		Name:     "user_repository.Create",
 		QueryRaw: sqlStatement,
 	}
+
 	err := r.db.DB().QueryRowContext(ctx, q, user.Name, user.Email, user.Password, user.Role).Scan(&lastInsertId)
 	if err != nil {
 		return 0, err
@@ -42,8 +45,8 @@ func (r *UserRepository) Update(ctx context.Context, id uint64, user model.UserU
 		Name:     "user_repository.Update",
 		QueryRaw: sqlStatement,
 	}
-	_, err := r.db.DB().ExecContext(ctx, q, user.Name, user.Email, user.Role, id)
 
+	_, err := r.db.DB().ExecContext(ctx, q, user.Name, user.Email, user.Role, id)
 	if err != nil {
 		return err
 	}
@@ -58,13 +61,17 @@ func (r *UserRepository) GetById(ctx context.Context, id uint64) (*models.User, 
 		Name:     "user_repository.GetById",
 		QueryRaw: sqlStatement,
 	}
+
 	err := r.db.DB().ScanOneContext(ctx, &user, q, id)
 	if err != nil {
-		return nil, err
+		if err == pgx.ErrNoRows {
+			return nil, errors.New("No rows")
+		} else {
+			return nil, err
+		}
 	}
 
-	userService := convertor.ToUserFromUserRepo(user)
-	return &userService, nil
+	return convertor.ToUserFromUserRepo(user), nil
 }
 
 func (r *UserRepository) Delete(ctx context.Context, id uint64) error {
@@ -73,8 +80,8 @@ func (r *UserRepository) Delete(ctx context.Context, id uint64) error {
 		Name:     "user_repository.DeleteById",
 		QueryRaw: sqlStatement,
 	}
-	_, err := r.db.DB().ExecContext(ctx, q, id)
 
+	_, err := r.db.DB().ExecContext(ctx, q, id)
 	if err != nil {
 		return err
 	}
