@@ -7,8 +7,6 @@ import (
 	"github.com/romanfomindev/microservices-auth/internal/app"
 )
 
-//var configPath string = ".env"
-
 func main() {
 	ctx := context.Background()
 
