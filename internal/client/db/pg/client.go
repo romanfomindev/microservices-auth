@@ -2,30 +2,24 @@ package pg
 
 import (
 	"context"
-	"time"
-
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/pkg/errors"
 	"github.com/romanfomindev/microservices-auth/internal/client/db"
+	"time"
 )
 
 type pgClient struct {
 	masterDBC db.DB
 }
 
-func New(ctx context.Context, dsn string, timeout int) (db.Client, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(timeout))
-	defer func() {
-		cancel()
-	}()
-
+func New(ctx context.Context, dsn string, timeout time.Duration) (db.Client, error) {
 	dbc, err := pgxpool.Connect(ctx, dsn)
 	if err != nil {
 		return nil, errors.Errorf("failed to connect to db: %v", err)
 	}
 
 	return &pgClient{
-		masterDBC: &pg{dbc: dbc},
+		masterDBC: &pg{dbc: dbc, timeout: timeout},
 	}, nil
 }
 
