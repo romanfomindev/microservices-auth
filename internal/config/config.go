@@ -1,6 +1,9 @@
 package config
 
-import "github.com/joho/godotenv"
+import (
+	"github.com/joho/godotenv"
+	"time"
+)
 
 func Load(path string) error {
 	err := godotenv.Load(path)
@@ -17,5 +20,5 @@ type GRPCConfig interface {
 
 type PGConfig interface {
 	DSN() string
-	Timeout() int
+	Timeout() time.Duration
 }

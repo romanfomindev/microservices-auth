@@ -3,8 +3,6 @@ package user
 import (
 	"context"
 	"github.com/jackc/pgx/v4"
-	"github.com/pkg/errors"
-
 	"github.com/romanfomindev/microservices-auth/internal/client/db"
 	"github.com/romanfomindev/microservices-auth/internal/models"
 	"github.com/romanfomindev/microservices-auth/internal/repositories"
@@ -65,10 +63,10 @@ func (r *UserRepository) GetById(ctx context.Context, id uint64) (*models.User, 
 	err := r.db.DB().ScanOneContext(ctx, &user, q, id)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, errors.New("No rows")
-		} else {
-			return nil, err
+			return nil, models.ErrorNoRows
 		}
+
+		return nil, err
 	}
 
 	return convertor.ToUserFromUserRepo(user), nil

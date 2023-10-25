@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgconn"
@@ -20,18 +21,23 @@ const (
 )
 
 type pg struct {
-	dbc *pgxpool.Pool
+	dbc     *pgxpool.Pool
+	timeout time.Duration
 }
 
-func NewDB(dbc *pgxpool.Pool) db.DB {
+func NewDB(dbc *pgxpool.Pool, timeout time.Duration) db.DB {
 	return &pg{
-		dbc: dbc,
+		dbc:     dbc,
+		timeout: timeout,
 	}
 }
 
 func (p *pg) ScanOneContext(ctx context.Context, dest interface{}, q db.Query, args ...interface{}) error {
 	logQuery(ctx, q, args...)
-
+	ctx, cancel := context.WithTimeout(ctx, time.Second*p.timeout)
+	defer func() {
+		cancel()
+	}()
 	row, err := p.QueryContext(ctx, q, args...)
 	if err != nil {
 		return err
@@ -42,7 +48,10 @@ func (p *pg) ScanOneContext(ctx context.Context, dest interface{}, q db.Query, a
 
 func (p *pg) ScanAllContext(ctx context.Context, dest interface{}, q db.Query, args ...interface{}) error {
 	logQuery(ctx, q, args...)
-
+	ctx, cancel := context.WithTimeout(ctx, time.Second*p.timeout)
+	defer func() {
+		cancel()
+	}()
 	rows, err := p.QueryContext(ctx, q, args...)
 	if err != nil {
 		return err
