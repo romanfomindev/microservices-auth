@@ -2,12 +2,13 @@ package user
 
 import (
 	"context"
+
 	"github.com/jackc/pgx/v4"
-	"github.com/romanfomindev/microservices-auth/internal/client/db"
 	"github.com/romanfomindev/microservices-auth/internal/models"
 	"github.com/romanfomindev/microservices-auth/internal/repositories"
 	"github.com/romanfomindev/microservices-auth/internal/repositories/user/convertor"
 	"github.com/romanfomindev/microservices-auth/internal/repositories/user/model"
+	"github.com/romanfomindev/platform_common/pkg/db"
 )
 
 var _ repositories.UserRepository = (*UserRepository)(nil)

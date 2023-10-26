@@ -5,10 +5,6 @@ import (
 	"log"
 
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/romanfomindev/microservices-auth/internal/client/db"
-	"github.com/romanfomindev/microservices-auth/internal/client/db/pg"
-	"github.com/romanfomindev/microservices-auth/internal/client/db/transaction"
-	"github.com/romanfomindev/microservices-auth/internal/closer"
 	"github.com/romanfomindev/microservices-auth/internal/config"
 	"github.com/romanfomindev/microservices-auth/internal/config/env"
 	handlers "github.com/romanfomindev/microservices-auth/internal/handlers/user_v1"
@@ -16,6 +12,10 @@ import (
 	"github.com/romanfomindev/microservices-auth/internal/repositories/user"
 	"github.com/romanfomindev/microservices-auth/internal/services"
 	userService "github.com/romanfomindev/microservices-auth/internal/services/user"
+	"github.com/romanfomindev/platform_common/pkg/closer"
+	"github.com/romanfomindev/platform_common/pkg/db"
+	"github.com/romanfomindev/platform_common/pkg/db/pg"
+	"github.com/romanfomindev/platform_common/pkg/db/transaction"
 )
 
 type serviceProvider struct {
