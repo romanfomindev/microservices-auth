@@ -2,9 +2,10 @@ package env
 
 import (
 	"errors"
-	"github.com/romanfomindev/microservices-auth/internal/config"
 	"net"
 	"os"
+
+	"github.com/romanfomindev/microservices-auth/internal/config"
 )
 
 const (

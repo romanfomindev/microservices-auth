@@ -3,6 +3,8 @@ package tests
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gojuno/minimock/v3"
 	"github.com/romanfomindev/microservices-auth/internal/convertor"
@@ -11,7 +13,6 @@ import (
 	serviceMock "github.com/romanfomindev/microservices-auth/internal/services/mocks"
 	desc "github.com/romanfomindev/microservices-auth/pkg/user_v1"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestCreateHandler(t *testing.T) {
@@ -26,19 +27,17 @@ func TestCreateHandler(t *testing.T) {
 		ctx = context.Background()
 		mc  = minimock.NewController(t)
 
-		id              = gofakeit.Uint64()
-		name            = gofakeit.Name()
-		email           = gofakeit.Email()
-		password        = ""
-		passwordConfirm = ""
-
-		req = &desc.CreateRequest{
+		id       = gofakeit.Uint64()
+		name     = gofakeit.Name()
+		email    = gofakeit.Email()
+		password = gofakeit.Password(true, false, false, false, false, 32)
+		req      = &desc.CreateRequest{
 			Info: &desc.UserInfo{
 				Name:            name,
 				Email:           email,
 				Password:        password,
-				PasswordConfirm: passwordConfirm,
-				//Role: desc.Roles("ADMIN"),
+				PasswordConfirm: password,
+				Role:            desc.Roles(desc.Roles_value["ADMIN"]),
 			},
 		}
 
