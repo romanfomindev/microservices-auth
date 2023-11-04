@@ -6,7 +6,6 @@ import (
 
 	"github.com/romanfomindev/microservices-auth/internal/convertor"
 	"github.com/romanfomindev/microservices-auth/internal/services"
-
 	desc "github.com/romanfomindev/microservices-auth/pkg/user_v1"
 	"google.golang.org/protobuf/types/known/emptypb"
 )

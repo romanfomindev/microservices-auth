@@ -2,10 +2,11 @@ package env
 
 import (
 	"errors"
-	"github.com/romanfomindev/microservices-auth/internal/config"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/romanfomindev/microservices-auth/internal/config"
 )
 
 const (

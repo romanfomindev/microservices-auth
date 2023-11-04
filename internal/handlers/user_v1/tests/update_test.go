@@ -3,16 +3,16 @@ package tests
 import (
 	"context"
 	"errors"
-	handlers "github.com/romanfomindev/microservices-auth/internal/handlers/user_v1"
-	"github.com/romanfomindev/microservices-auth/internal/models"
-	serviceMock "github.com/romanfomindev/microservices-auth/internal/services/mocks"
-	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gojuno/minimock/v3"
+	handlers "github.com/romanfomindev/microservices-auth/internal/handlers/user_v1"
+	"github.com/romanfomindev/microservices-auth/internal/models"
 	"github.com/romanfomindev/microservices-auth/internal/services"
+	serviceMock "github.com/romanfomindev/microservices-auth/internal/services/mocks"
 	desc "github.com/romanfomindev/microservices-auth/pkg/user_v1"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
@@ -40,13 +40,13 @@ func TestUpdateHandler(t *testing.T) {
 			Email: wrapperspb.String(email),
 			Role:  role,
 		}
-		res = &emptypb.Empty{}
+		res        = &emptypb.Empty{}
 		errService = errors.New("service error")
 
 		user = &models.User{
-			Name:      name,
-			Email:     email,
-			Role:      models.Role("ADMIN"),
+			Name:  name,
+			Email: email,
+			Role:  models.Role("ADMIN"),
 		}
 	)
 	defer t.Cleanup(mc.Finish)
@@ -61,11 +61,11 @@ func TestUpdateHandler(t *testing.T) {
 		{
 			name: "success case",
 			args: args{
-				ctx: ctx,
+				ctx:     ctx,
 				request: req,
 			},
 			want: res,
-			err: nil,
+			err:  nil,
 			userServiceMock: func(mc *minimock.Controller) services.UserService {
 				mock := serviceMock.NewUserServiceMock(mc)
 				mock.UpdateMock.Expect(ctx, id, *user).Return(nil)
@@ -76,11 +76,11 @@ func TestUpdateHandler(t *testing.T) {
 		{
 			name: "error case user not found",
 			args: args{
-				ctx: ctx,
+				ctx:     ctx,
 				request: req,
 			},
 			want: res,
-			err: models.ErrorNoRows,
+			err:  models.ErrorNoRows,
 			userServiceMock: func(mc *minimock.Controller) services.UserService {
 				mock := serviceMock.NewUserServiceMock(mc)
 				mock.UpdateMock.Expect(ctx, id, *user).Return(models.ErrorNoRows)
@@ -91,11 +91,11 @@ func TestUpdateHandler(t *testing.T) {
 		{
 			name: "error case",
 			args: args{
-				ctx: ctx,
+				ctx:     ctx,
 				request: req,
 			},
 			want: res,
-			err: errService,
+			err:  errService,
 			userServiceMock: func(mc *minimock.Controller) services.UserService {
 				mock := serviceMock.NewUserServiceMock(mc)
 				mock.UpdateMock.Expect(ctx, id, *user).Return(errService)

@@ -16,7 +16,6 @@ import (
 )
 
 func TestDeleteHandler(t *testing.T) {
-
 	type userServiceMockFunc func(mc *minimock.Controller) services.UserService
 
 	type args struct {

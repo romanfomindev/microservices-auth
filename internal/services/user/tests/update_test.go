@@ -3,6 +3,8 @@ package tests
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gojuno/minimock/v3"
 	"github.com/romanfomindev/microservices-auth/internal/models"
@@ -11,7 +13,6 @@ import (
 	"github.com/romanfomindev/microservices-auth/internal/repositories/user/model"
 	"github.com/romanfomindev/microservices-auth/internal/services/user"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestUpdate(t *testing.T) {
@@ -27,16 +28,17 @@ func TestUpdate(t *testing.T) {
 		ctx = context.Background()
 		mc  = minimock.NewController(t)
 
-		id      = gofakeit.Uint64()
-		name    = gofakeit.Name()
-		email   = gofakeit.Email()
-		role    = models.Role("ADMIN")
-		repoErr = fmt.Errorf("repo error")
+		id       = gofakeit.Uint64()
+		name     = gofakeit.Name()
+		email    = gofakeit.Email()
+		password = gofakeit.Password(true, false, false, false, false, 32)
+		role     = models.Role("ADMIN")
+		repoErr  = fmt.Errorf("repo error")
 
 		userService = models.User{
 			Name:      name,
 			Email:     email,
-			Password:  "",
+			Password:  password,
 			Role:      role,
 			CreatedAt: gofakeit.Date(),
 		}
@@ -51,7 +53,7 @@ func TestUpdate(t *testing.T) {
 			ID:        gofakeit.Int64(),
 			Name:      gofakeit.Name(),
 			Email:     gofakeit.Email(),
-			Password:  "",
+			Password:  password,
 			Role:      models.Role("ADMIN"),
 			CreatedAt: gofakeit.Date(),
 		}

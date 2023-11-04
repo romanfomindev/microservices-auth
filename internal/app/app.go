@@ -6,11 +6,10 @@ import (
 	"net"
 
 	"github.com/romanfomindev/microservices-auth/internal/config"
+	desc "github.com/romanfomindev/microservices-auth/pkg/user_v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-
-	desc "github.com/romanfomindev/microservices-auth/pkg/user_v1"
 )
 
 type App struct {

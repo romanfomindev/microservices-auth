@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+
 	"github.com/romanfomindev/microservices-auth/internal/convertor"
 	"github.com/romanfomindev/microservices-auth/internal/models"
 )

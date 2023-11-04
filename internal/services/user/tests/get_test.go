@@ -3,6 +3,8 @@ package tests
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gojuno/minimock/v3"
 	"github.com/romanfomindev/microservices-auth/internal/models"
@@ -10,7 +12,6 @@ import (
 	repoMock "github.com/romanfomindev/microservices-auth/internal/repositories/mocks"
 	"github.com/romanfomindev/microservices-auth/internal/services/user"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestGet(t *testing.T) {
