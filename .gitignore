@@ -2,3 +2,4 @@
 /bin/
 /postgres_volume/
 /coverage.out
+/vendor.protogen

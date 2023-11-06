@@ -23,3 +23,11 @@ type PGConfig interface {
 	DSN() string
 	Timeout() time.Duration
 }
+
+type HTTPConfig interface {
+	Address() string
+}
+
+type SwaggerConfig interface {
+	Address() string
+}
