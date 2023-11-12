@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 type Role string
@@ -21,4 +23,10 @@ type User struct {
 	Role            Role
 	CreatedAt       time.Time
 	UpdatedAt       *time.Time
+}
+
+type UserClaims struct {
+	jwt.StandardClaims
+	Email string `json:"email"`
+	Role  string `json:"role"`
 }

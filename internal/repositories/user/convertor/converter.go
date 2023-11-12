@@ -17,6 +17,7 @@ func ToUserFromUserRepo(userRepo model.User) *models.User {
 		ID:        userRepo.ID,
 		Name:      userRepo.Name,
 		Email:     userRepo.Email,
+		Password:  userRepo.Password,
 		Role:      userRepo.Role,
 		CreatedAt: userRepo.CreatedAt,
 		UpdatedAt: updatedAt,

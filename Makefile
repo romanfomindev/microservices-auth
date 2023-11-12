@@ -18,9 +18,20 @@ get-deps:
 lint:
 	GOBIN=$(LOCAL_BIN) golangci-lint run ./... --config .golangci.pipeline.yaml
 
+local-migration-status:
+	goose -dir ${MIGRATION_DIR} postgres ${PG_DSN} status -v
+
+local-migration-up:
+	GOBIN=$(LOCAL_BIN) goose -dir ${MIGRATION_DIR} postgres ${PG_DSN} up -v
+
+local-migration-down:
+	goose -dir ${MIGRATION_DIR} postgres ${PG_DSN} down -v
+
 generate:
 	mkdir -p pkg/swagger
 	make generate-user-api
+	make generate-auth-api
+	make generate-access-api
 	$(LOCAL_BIN)/statik -src=pkg/swagger/ -include='*.css,*.html,*.js,*.json,*.png'
 
 generate-user-api:
@@ -37,6 +48,36 @@ generate-user-api:
 	--openapiv2_out=allow_merge=true,merge_file_name=api:pkg/swagger \
 	--plugin=protoc-gen-openapiv2=bin/protoc-gen-openapiv2 \
 	api/user_v1/user.proto
+
+generate-auth-api:
+	mkdir -p pkg/auth_v1
+	protoc --proto_path api/auth_v1 --proto_path vendor.protogen \
+	--go_out=pkg/auth_v1 --go_opt=paths=source_relative \
+	--plugin=protoc-gen-go=bin/protoc-gen-go \
+	--go-grpc_out=pkg/auth_v1 --go-grpc_opt=paths=source_relative \
+	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+	--validate_out lang=go:pkg/auth_v1 --validate_opt=paths=source_relative \
+	--plugin=protoc-gen-validate=bin/protoc-gen-validate \
+	--grpc-gateway_out=pkg/auth_v1 --grpc-gateway_opt=paths=source_relative \
+	--plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
+	--openapiv2_out=allow_merge=true,merge_file_name=api:pkg/swagger \
+	--plugin=protoc-gen-openapiv2=bin/protoc-gen-openapiv2 \
+	api/auth_v1/auth.proto
+
+generate-access-api:
+	mkdir -p pkg/access_v1
+	protoc --proto_path api/access_v1 --proto_path vendor.protogen \
+	--go_out=pkg/access_v1 --go_opt=paths=source_relative \
+	--plugin=protoc-gen-go=bin/protoc-gen-go \
+	--go-grpc_out=pkg/access_v1 --go-grpc_opt=paths=source_relative \
+	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+	--validate_out lang=go:pkg/access_v1 --validate_opt=paths=source_relative \
+	--plugin=protoc-gen-validate=bin/protoc-gen-validate \
+	--grpc-gateway_out=pkg/access_v1 --grpc-gateway_opt=paths=source_relative \
+	--plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
+	--openapiv2_out=allow_merge=true,merge_file_name=api:pkg/swagger \
+	--plugin=protoc-gen-openapiv2=bin/protoc-gen-openapiv2 \
+	api/access_v1/access.proto
 
 test:
 	go clean -testcache

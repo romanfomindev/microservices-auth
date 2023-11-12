@@ -12,6 +12,8 @@ import (
 	"github.com/rakyll/statik/fs"
 	"github.com/romanfomindev/microservices-auth/internal/config"
 	"github.com/romanfomindev/microservices-auth/internal/interceptor"
+	accessDesc "github.com/romanfomindev/microservices-auth/pkg/access_v1"
+	authDesc "github.com/romanfomindev/microservices-auth/pkg/auth_v1"
 	desc "github.com/romanfomindev/microservices-auth/pkg/user_v1"
 	_ "github.com/romanfomindev/microservices-auth/statik"
 	"github.com/romanfomindev/platform_common/pkg/closer"
@@ -122,6 +124,8 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 	reflection.Register(a.grpcServer)
 
 	desc.RegisterUserV1Server(a.grpcServer, a.serviceProvider.UserHandlers(ctx))
+	authDesc.RegisterAuthServiceServer(a.grpcServer, a.serviceProvider.AuthHandlers(ctx))
+	accessDesc.RegisterAccessServiceServer(a.grpcServer, a.serviceProvider.AccessHandlers(ctx))
 
 	return nil
 }
@@ -133,6 +137,10 @@ func (a *App) initHTTPServer(ctx context.Context) error {
 	}
 
 	err := desc.RegisterUserV1HandlerFromEndpoint(ctx, mux, a.serviceProvider.GRPCConfig().Address(), opts)
+	if err != nil {
+		return err
+	}
+	err = authDesc.RegisterAuthServiceHandlerFromEndpoint(ctx, mux, a.serviceProvider.GRPCConfig().Address(), opts)
 	if err != nil {
 		return err
 	}

@@ -102,7 +102,16 @@ func (m *UserInfo) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	// no validation rules for Role
+	if _, ok := _UserInfo_Role_InLookup[m.GetRole()]; !ok {
+		err := UserInfoValidationError{
+			field:  "Role",
+			reason: "value must be in list [UNKNOWN USER ADMIN]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return UserInfoMultiError(errors)
@@ -230,6 +239,12 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UserInfoValidationError{}
+
+var _UserInfo_Role_InLookup = map[Roles]struct{}{
+	0: {},
+	1: {},
+	2: {},
+}
 
 // Validate checks the field values on User with the rules defined in the proto
 // definition for this message. If any rules are violated, the first error

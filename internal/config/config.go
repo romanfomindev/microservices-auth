@@ -31,3 +31,10 @@ type HTTPConfig interface {
 type SwaggerConfig interface {
 	Address() string
 }
+
+type AuthConfig interface {
+	RefreshTokenSecretKey() string
+	AccessTokenSecretKey() string
+	RefreshTokenExpiration() time.Duration
+	AccessTokenExpiration() time.Duration
+}

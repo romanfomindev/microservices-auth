@@ -87,3 +87,23 @@ func (r *UserRepository) Delete(ctx context.Context, id uint64) error {
 
 	return nil
 }
+
+func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	var user model.User
+	sqlStatement := "SELECT id, name, email, password, role, created_at, updated_at FROM users WHERE email = $1"
+	q := db.Query{
+		Name:     "user_repository.GetById",
+		QueryRaw: sqlStatement,
+	}
+
+	err := r.db.DB().ScanOneContext(ctx, &user, q, email)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, models.ErrorNoRows
+		}
+
+		return nil, err
+	}
+
+	return convertor.ToUserFromUserRepo(user), nil
+}
