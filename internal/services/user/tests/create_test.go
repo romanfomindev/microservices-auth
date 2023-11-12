@@ -10,7 +10,6 @@ import (
 	"github.com/romanfomindev/microservices-auth/internal/models"
 	"github.com/romanfomindev/microservices-auth/internal/repositories"
 	repoMock "github.com/romanfomindev/microservices-auth/internal/repositories/mocks"
-	"github.com/romanfomindev/microservices-auth/internal/repositories/user/model"
 	"github.com/romanfomindev/microservices-auth/internal/services/user"
 	"github.com/stretchr/testify/require"
 )
@@ -41,12 +40,6 @@ func TestCreate(t *testing.T) {
 			Password: password,
 			Role:     role,
 		}
-		reqRepo = model.UserCreate{
-			Name:     name,
-			Email:    email,
-			Password: password,
-			Role:     role,
-		}
 	)
 
 	defer t.Cleanup(mc.Finish)
@@ -68,7 +61,7 @@ func TestCreate(t *testing.T) {
 			err:  nil,
 			userRepositoryMock: func(mc *minimock.Controller) repositories.UserRepository {
 				mock := repoMock.NewUserRepositoryMock(mc)
-				mock.CreateMock.Expect(ctx, reqRepo).Return(id, nil)
+				mock.CreateMock.Return(id, nil)
 
 				return mock
 			},
@@ -83,7 +76,7 @@ func TestCreate(t *testing.T) {
 			err:  repoErr,
 			userRepositoryMock: func(mc *minimock.Controller) repositories.UserRepository {
 				mock := repoMock.NewUserRepositoryMock(mc)
-				mock.CreateMock.Expect(ctx, reqRepo).Return(0, repoErr)
+				mock.CreateMock.Return(0, repoErr)
 
 				return mock
 			},

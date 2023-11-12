@@ -7,10 +7,15 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/romanfomindev/microservices-auth/internal/config"
 	"github.com/romanfomindev/microservices-auth/internal/config/env"
+	accessHandlers "github.com/romanfomindev/microservices-auth/internal/handlers/access_v1"
+	authHandlers "github.com/romanfomindev/microservices-auth/internal/handlers/auth_v1"
 	handlers "github.com/romanfomindev/microservices-auth/internal/handlers/user_v1"
 	"github.com/romanfomindev/microservices-auth/internal/repositories"
+	"github.com/romanfomindev/microservices-auth/internal/repositories/url_protected"
 	"github.com/romanfomindev/microservices-auth/internal/repositories/user"
 	"github.com/romanfomindev/microservices-auth/internal/services"
+	accessService "github.com/romanfomindev/microservices-auth/internal/services/access"
+	authService "github.com/romanfomindev/microservices-auth/internal/services/auth"
 	userService "github.com/romanfomindev/microservices-auth/internal/services/user"
 	"github.com/romanfomindev/platform_common/pkg/closer"
 	"github.com/romanfomindev/platform_common/pkg/db"
@@ -19,16 +24,22 @@ import (
 )
 
 type serviceProvider struct {
-	pgPool         *pgxpool.Pool
-	dbClient       db.Client
-	pgConfig       config.PGConfig
-	txManager      db.TxManager
-	grpcConfig     config.GRPCConfig
-	httpConfig     config.HTTPConfig
-	swaggerConfig  config.SwaggerConfig
-	userRepository repositories.UserRepository
-	userService    services.UserService
-	userHandlers   *handlers.UserV1Handlers
+	pgPool                  *pgxpool.Pool
+	dbClient                db.Client
+	pgConfig                config.PGConfig
+	swaggerConfig           config.SwaggerConfig
+	authConfig              config.AuthConfig
+	txManager               db.TxManager
+	grpcConfig              config.GRPCConfig
+	httpConfig              config.HTTPConfig
+	userRepository          repositories.UserRepository
+	urlsProtectedRepository repositories.UrlsProtectedRepository
+	userService             services.UserService
+	authService             services.AuthService
+	accessService           services.AccessService
+	userHandlers            *handlers.UserV1Handlers
+	authHandlers            *authHandlers.AuthV1Handlers
+	accessHandlers          *accessHandlers.AccessV1Handlers
 }
 
 func NewServiceProvider() *serviceProvider {
@@ -87,6 +98,19 @@ func (s *serviceProvider) SwaggerConfig() config.SwaggerConfig {
 	return s.swaggerConfig
 }
 
+func (s *serviceProvider) AuthConfig() config.AuthConfig {
+	if s.authConfig == nil {
+		cfg, err := env.NewAuthConfig()
+		if err != nil {
+			log.Fatalf("failed to get auth config: %s", err.Error())
+		}
+
+		s.authConfig = cfg
+	}
+
+	return s.authConfig
+}
+
 func (s *serviceProvider) PgPool(ctx context.Context) *pgxpool.Pool {
 	if s.pgPool == nil {
 		pool, err := pgxpool.Connect(ctx, s.pgConfig.DSN())
@@ -126,6 +150,14 @@ func (s *serviceProvider) UserRepository(ctx context.Context) repositories.UserR
 	return s.userRepository
 }
 
+func (s *serviceProvider) UrlsProtectedRepository(ctx context.Context) repositories.UrlsProtectedRepository {
+	if s.urlsProtectedRepository == nil {
+		s.urlsProtectedRepository = url_protected.NewUrlProtectedPepository(s.DBClient(ctx))
+	}
+
+	return s.urlsProtectedRepository
+}
+
 func (s *serviceProvider) UserService(ctx context.Context) services.UserService {
 	if s.userService == nil {
 		s.userService = userService.NewService(s.UserRepository(ctx))
@@ -134,11 +166,48 @@ func (s *serviceProvider) UserService(ctx context.Context) services.UserService 
 	return s.userService
 }
 
+func (s *serviceProvider) AuthService(ctx context.Context) services.AuthService {
+	if s.authService == nil {
+		authConfig := s.AuthConfig()
+		s.authService = authService.NewAuthService(
+			authConfig.RefreshTokenSecretKey(),
+			authConfig.AccessTokenSecretKey(),
+			authConfig.RefreshTokenExpiration(),
+			authConfig.AccessTokenExpiration(),
+			s.UserRepository(ctx),
+		)
+	}
+
+	return s.authService
+}
+
+func (s *serviceProvider) AccessService(ctx context.Context) services.AccessService {
+	if s.accessService == nil {
+		s.accessService = accessService.NewAccessService(s.UrlsProtectedRepository(ctx), s.AuthConfig().AccessTokenSecretKey())
+	}
+
+	return s.accessService
+}
+
 func (s *serviceProvider) UserHandlers(ctx context.Context) *handlers.UserV1Handlers {
 	if s.userHandlers == nil {
 		s.userHandlers = handlers.NewUserHandlers(s.UserService(ctx))
 	}
 	return s.userHandlers
+}
+
+func (s *serviceProvider) AuthHandlers(ctx context.Context) *authHandlers.AuthV1Handlers {
+	if s.authHandlers == nil {
+		s.authHandlers = authHandlers.NewAuthHandlers(s.AuthService(ctx))
+	}
+	return s.authHandlers
+}
+
+func (s *serviceProvider) AccessHandlers(ctx context.Context) *accessHandlers.AccessV1Handlers {
+	if s.accessHandlers == nil {
+		s.accessHandlers = accessHandlers.NewAccessHandlers(s.AccessService(ctx))
+	}
+	return s.accessHandlers
 }
 
 func (s *serviceProvider) DBClient(ctx context.Context) db.Client {
