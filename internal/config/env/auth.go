@@ -27,22 +27,27 @@ func NewAuthConfig() (config.AuthConfig, error) {
 	if len(refreshToken) == 0 {
 		return nil, errors.New("refresh token not found")
 	}
+
 	accessToken := os.Getenv(accessTokenSecretKey)
 	if len(refreshToken) == 0 {
 		return nil, errors.New("access token not found")
 	}
+
 	refreshTokenExpirationEnv := os.Getenv(refreshTokenExpiration)
 	if len(refreshTokenExpirationEnv) == 0 {
 		return nil, errors.New("refresh token expiration not found")
 	}
+
 	refreshTokenExpirationValue, err := time.ParseDuration(refreshTokenExpirationEnv)
 	if err != nil {
 		return nil, errors.New("invalid refresh token expiration")
 	}
+
 	accessTokenExpirationEnv := os.Getenv(accessTokenExpiration)
 	if len(accessTokenExpirationEnv) == 0 {
 		return nil, errors.New("access token expiration not found")
 	}
+
 	accessTokenExpirationValue, err := time.ParseDuration(accessTokenExpirationEnv)
 	if err != nil {
 		return nil, errors.New("invalid refresh token expiration")
