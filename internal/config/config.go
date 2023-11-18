@@ -38,3 +38,15 @@ type AuthConfig interface {
 	RefreshTokenExpiration() time.Duration
 	AccessTokenExpiration() time.Duration
 }
+
+type AppConfig interface {
+	Env() string
+}
+
+type LoggerConfig interface {
+	Level() string
+}
+
+type PrometheusConfig interface {
+	Address() string
+}

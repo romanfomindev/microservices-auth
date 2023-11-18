@@ -8,6 +8,7 @@ import (
 	"github.com/brianvoe/gofakeit/v6"
 	"github.com/gojuno/minimock/v3"
 	handlers "github.com/romanfomindev/microservices-auth/internal/handlers/user_v1"
+	"github.com/romanfomindev/microservices-auth/internal/logger"
 	"github.com/romanfomindev/microservices-auth/internal/models"
 	"github.com/romanfomindev/microservices-auth/internal/services"
 	serviceMock "github.com/romanfomindev/microservices-auth/internal/services/mocks"
@@ -16,7 +17,18 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+func setup() {
+	logger.Init("info", "testing")
+}
+
+func teardown() {
+
+}
+
 func TestGetHandler(t *testing.T) {
+	setup()
+	defer teardown()
+
 	type userServiceMockFunc func(mc *minimock.Controller) services.UserService
 
 	type args struct {

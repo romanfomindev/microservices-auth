@@ -11,6 +11,22 @@ services:
       - "${PG_PORT}:5432"
     volumes:
       - ./postgres_volume:/var/lib/postgresql/data
+    restart: always
+  prometheus:
+    image: prom/prometheus:v2.37.9
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infra/alerts.yml:/etc/prometheus/alerts.yml
+      - ./prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana-oss:10.0.3
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana_data:/var/lib/grafana
 
   migrator:
     build:
@@ -19,3 +35,14 @@ services:
     restart: on-failure
     environment:
       DB_HOST: pg
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.48
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686" # web
+      - "14268:14268"
+      - "9411:9411"
