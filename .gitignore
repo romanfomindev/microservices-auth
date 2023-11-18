@@ -1,5 +1,8 @@
 .idea
 /bin/
 /postgres_volume/
+/prometheus_data
+/grafana_data
 /coverage.out
 /vendor.protogen
+/logs/

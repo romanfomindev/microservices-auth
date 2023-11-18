@@ -26,12 +26,15 @@ import (
 type serviceProvider struct {
 	pgPool                  *pgxpool.Pool
 	dbClient                db.Client
+	appConfig               config.AppConfig
 	pgConfig                config.PGConfig
 	swaggerConfig           config.SwaggerConfig
 	authConfig              config.AuthConfig
+	loggerConfig            config.LoggerConfig
 	txManager               db.TxManager
 	grpcConfig              config.GRPCConfig
 	httpConfig              config.HTTPConfig
+	prometheusConfig        config.PrometheusConfig
 	userRepository          repositories.UserRepository
 	urlsProtectedRepository repositories.UrlsProtectedRepository
 	userService             services.UserService
@@ -57,6 +60,45 @@ func (s *serviceProvider) PGConfig() config.PGConfig {
 	}
 
 	return s.pgConfig
+}
+
+func (s *serviceProvider) AppConfig() config.AppConfig {
+	if s.appConfig == nil {
+		cfg, err := env.NewAppConfig()
+		if err != nil {
+			log.Fatalf("failed to get app config: %s", err.Error())
+		}
+
+		s.appConfig = cfg
+	}
+
+	return s.appConfig
+}
+
+func (s *serviceProvider) LoggerConfig() config.LoggerConfig {
+	if s.loggerConfig == nil {
+		cfg, err := env.NewLoggerConfig()
+		if err != nil {
+			log.Fatalf("failed to get logger config: %s", err.Error())
+		}
+
+		s.loggerConfig = cfg
+	}
+
+	return s.loggerConfig
+}
+
+func (s *serviceProvider) PrometheusConfig() config.PrometheusConfig {
+	if s.prometheusConfig == nil {
+		cfg, err := env.NewPrometheusConfig()
+		if err != nil {
+			log.Fatalf("failed to get prometheus config: %s", err.Error())
+		}
+
+		s.prometheusConfig = cfg
+	}
+
+	return s.prometheusConfig
 }
 
 func (s *serviceProvider) GRPCConfig() config.GRPCConfig {

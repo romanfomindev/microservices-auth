@@ -5,8 +5,10 @@ import (
 	"log"
 
 	"github.com/romanfomindev/microservices-auth/internal/convertor"
+	"github.com/romanfomindev/microservices-auth/internal/logger"
 	"github.com/romanfomindev/microservices-auth/internal/services"
 	desc "github.com/romanfomindev/microservices-auth/pkg/user_v1"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -44,7 +46,7 @@ func (h *UserV1Handlers) Create(ctx context.Context, request *desc.CreateRequest
 }
 
 func (h *UserV1Handlers) Get(ctx context.Context, request *desc.GetRequest) (*desc.GetResponse, error) {
-	log.Printf("ID: %d\n", request.GetId())
+	logger.Info("USER ID", zap.Uint64("id", request.GetId()))
 
 	user, err := h.serv.GetById(ctx, request.GetId())
 	if err != nil {

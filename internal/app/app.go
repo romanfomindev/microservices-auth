@@ -6,28 +6,39 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 
+	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/natefinch/lumberjack"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rakyll/statik/fs"
 	"github.com/romanfomindev/microservices-auth/internal/config"
 	"github.com/romanfomindev/microservices-auth/internal/interceptor"
+	"github.com/romanfomindev/microservices-auth/internal/logger"
+	"github.com/romanfomindev/microservices-auth/internal/metric"
 	accessDesc "github.com/romanfomindev/microservices-auth/pkg/access_v1"
 	authDesc "github.com/romanfomindev/microservices-auth/pkg/auth_v1"
 	desc "github.com/romanfomindev/microservices-auth/pkg/user_v1"
 	_ "github.com/romanfomindev/microservices-auth/statik"
 	"github.com/romanfomindev/platform_common/pkg/closer"
 	"github.com/rs/cors"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
+const APP_ENV_PROD = "prod"
+
 type App struct {
-	serviceProvider *serviceProvider
-	grpcServer      *grpc.Server
-	httpServer      *http.Server
-	swaggerServer   *http.Server
+	serviceProvider  *serviceProvider
+	grpcServer       *grpc.Server
+	httpServer       *http.Server
+	swaggerServer    *http.Server
+	prometheusServer *http.Server
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -48,7 +59,7 @@ func (a *App) Run() error {
 	}()
 
 	wg := sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
@@ -77,6 +88,15 @@ func (a *App) Run() error {
 		}
 	}()
 
+	go func() {
+		defer wg.Done()
+
+		err := a.runPrometheusServer()
+		if err != nil {
+			log.Fatalf("failed to run Prometheus server: %v", err)
+		}
+	}()
+
 	wg.Wait()
 
 	return nil
@@ -86,9 +106,12 @@ func (a *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		a.initConfig,
 		a.initServiceProvider,
+		a.initLogger,
+		a.initPrometheus,
 		a.initGRPCServer,
 		a.initHTTPServer,
 		a.initSwaggerServer,
+		a.initPrometheusServer,
 	}
 
 	for _, f := range inits {
@@ -115,10 +138,23 @@ func (a *App) initServiceProvider(_ context.Context) error {
 	return nil
 }
 
+func (a *App) initLogger(ctx context.Context) error {
+	logger.Init(a.serviceProvider.LoggerConfig().Level(), a.serviceProvider.AppConfig().Env())
+	return nil
+}
+
+func (a *App) initPrometheus(ctx context.Context) error {
+	metric.Init(ctx)
+	return nil
+}
+
 func (a *App) initGRPCServer(ctx context.Context) error {
 	a.grpcServer = grpc.NewServer(
 		grpc.Creds(insecure.NewCredentials()),
-		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+		grpc.UnaryInterceptor(grpcMiddleware.ChainUnaryServer(
+			interceptor.ValidateInterceptor,
+			interceptor.MetricsInterceptor,
+		)),
 	)
 
 	reflection.Register(a.grpcServer)
@@ -178,6 +214,18 @@ func (a *App) initSwaggerServer(ctx context.Context) error {
 	return nil
 }
 
+func (a *App) initPrometheusServer(ctx context.Context) error {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	a.prometheusServer = &http.Server{
+		Addr:    a.serviceProvider.PrometheusConfig().Address(),
+		Handler: mux,
+	}
+
+	return nil
+}
+
 func (a *App) runGRPCServer() error {
 	log.Printf("GRPC server is running on %s", a.serviceProvider.GRPCConfig().Address())
 
@@ -209,6 +257,17 @@ func (a *App) runSwaggerServer() error {
 	log.Printf("Swagger server is running on %s", a.serviceProvider.SwaggerConfig().Address())
 
 	err := a.swaggerServer.ListenAndServe()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a *App) runPrometheusServer() error {
+	log.Printf("Prometheus server is running on %s", "localhost:2112")
+
+	err := a.prometheusServer.ListenAndServe()
 	if err != nil {
 		return err
 	}
@@ -254,4 +313,39 @@ func serveSwaggerFile(path string) http.HandlerFunc {
 
 		log.Printf("Served swagger file: %s", path)
 	}
+}
+
+func getCore(level zap.AtomicLevel, appEnv string) zapcore.Core {
+	stdout := zapcore.AddSync(os.Stdout)
+
+	file := zapcore.AddSync(&lumberjack.Logger{
+		Filename:   "logs/app.log",
+		MaxSize:    10, // megabytes
+		MaxBackups: 3,
+		MaxAge:     7, // days
+	})
+
+	cfg := zap.NewDevelopmentEncoderConfig()
+	cfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	encoder := zapcore.NewConsoleEncoder(cfg)
+	out := stdout
+
+	if appEnv == APP_ENV_PROD {
+		cfg = zap.NewProductionEncoderConfig()
+		cfg.TimeKey = "timestamp"
+		cfg.EncodeTime = zapcore.ISO8601TimeEncoder
+		encoder = zapcore.NewJSONEncoder(cfg)
+		out = file
+	}
+
+	return zapcore.NewCore(encoder, out, level)
+}
+
+func getAtomicLevel(level string) zap.AtomicLevel {
+	var logLevel zapcore.Level
+	if err := logLevel.Set(level); err != nil {
+		log.Fatalf("failed to set log level: %v", err)
+	}
+
+	return zap.NewAtomicLevelAt(logLevel)
 }
