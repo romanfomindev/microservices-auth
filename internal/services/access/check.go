@@ -9,25 +9,25 @@ import (
 	"github.com/romanfomindev/microservices-auth/internal/utils"
 )
 
-func (s accessService) Check(ctx context.Context, accessToken, endpointAddress string) error {
+func (s accessService) Check(ctx context.Context, accessToken, endpointAddress string) (*models.UserClaims, error) {
 	claims, err := utils.VerifyToken(accessToken, []byte(s.accessTokenSecretKey))
 	if err != nil {
-		return fmt.Errorf("access token is invalid: %w", err)
+		return nil, fmt.Errorf("access token is invalid: %w", err)
 	}
 
 	urlProtected, err := s.repo.GetByUrl(ctx, endpointAddress)
 	if err != nil {
 		if errors.Is(err, models.ErrorNoRows) {
-			return nil
+			return claims, nil
 		}
-		return err
+		return nil, err
 	}
 
 	for _, role := range urlProtected.Roles {
 		if role == claims.Role {
-			return nil
+			return claims, nil
 		}
 	}
 
-	return models.ErrorAccessDenied
+	return nil, models.ErrorAccessDenied
 }
