@@ -26,6 +26,14 @@
   ],
   "paths": {},
   "definitions": {
+    "access_v1CheckResponse": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        }
+      }
+    },
     "protobufAny": {
       "type": "object",
       "properties": {

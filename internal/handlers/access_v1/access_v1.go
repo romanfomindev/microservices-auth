@@ -8,7 +8,6 @@ import (
 	"github.com/romanfomindev/microservices-auth/internal/services"
 	desc "github.com/romanfomindev/microservices-auth/pkg/access_v1"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -26,7 +25,7 @@ func NewAccessHandlers(service services.AccessService) *AccessV1Handlers {
 	}
 }
 
-func (h *AccessV1Handlers) Check(ctx context.Context, request *desc.CheckRequest) (*emptypb.Empty, error) {
+func (h *AccessV1Handlers) Check(ctx context.Context, request *desc.CheckRequest) (*desc.CheckResponse, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, errors.New("metadata is not provided")
@@ -43,10 +42,12 @@ func (h *AccessV1Handlers) Check(ctx context.Context, request *desc.CheckRequest
 
 	accessToken := strings.TrimPrefix(authHeader[0], authPrefix)
 
-	err := h.service.Check(ctx, accessToken, request.EndpointAddress)
+	claims, err := h.service.Check(ctx, accessToken, request.EndpointAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	return &emptypb.Empty{}, nil
+	return &desc.CheckResponse{
+		Email: claims.Email,
+	}, nil
 }
